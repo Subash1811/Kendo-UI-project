@@ -1,0 +1,267 @@
+﻿@model ShiplogixQuotation.ViewModels.QuotationViewModel
+@{
+    ViewBag.Title = "Quotations";
+}
+
+<style>
+    /* Search panel specific styling */
+    .search-panel {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        padding: 15px 20px;
+        margin-bottom: 15px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 15px;
+        align-items: end;
+    }
+
+        .search-panel label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .search-panel .k-textbox,
+        .search-panel .k-dropdown,
+        .search-panel .k-datepicker {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+    .fetch-button-container {
+        grid-column: 1 / -1;
+        text-align: left;
+    }
+
+        .fetch-button-container button {
+            padding: 8px 20px;
+            color: #fff;
+            background-color: #608da7;
+            background-image: none, linear-gradient(to bottom, rgba(255, 255, 255, .25) 0, rgba(255, 255, 255, 0) 100%);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+
+    .k-combobox {
+        position: relative;
+        display: inline-block;
+        width: 19.4em;
+        overflow: visible;
+        border-width: 0;
+        vertical-align: middle;
+    }
+
+
+
+    #QuotationGrid {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+</style>
+
+@using (Html.BeginForm("GetQuotations", "Index", FormMethod.Post, new { id = "QuotationSearchForm" }))
+{
+    <div class="search-panel">
+
+        <div>
+            <label for="QuotationDate">From Date</label>
+            @(Html.Kendo().DatePickerFor(m => m.QuotationDate).HtmlAttributes(new { id = "QuotationDate" }))
+        </div>
+
+        <div>
+            <label for="QuotationValidity">To Date</label>
+            @(Html.Kendo().DatePickerFor(m => m.QuotationValidity).HtmlAttributes(new { id = "QuotationValidity" }))
+        </div>
+
+        <div>
+            <label for="CustomerId">Customer</label>
+            @(Html.Kendo().MultiColumnComboBoxFor(m => m.CustomerId)
+                                                .Name("CustomerId")
+                                                .Placeholder("Select Customer")
+                                                .DataTextField("CustomerName")
+                                                .DataValueField("CustomerId")
+                                                .Filter(FilterType.Contains)
+                                                .FilterFields(new[] { "CustomerName", "typ" })
+                                                .BindTo((IEnumerable<ShiplogixQuotation.ViewModels.Customer>)ViewBag.Customer)
+                                                .Columns(cols =>
+                                                {
+                                                    cols.Add().Field("typ").Title("Type").Width("100px");
+                                                    cols.Add().Field("CustomerName").Title("Customer Name").Width("200px");
+                                                })
+                                                .HtmlAttributes(new { id = "CustomerId" })
+            )
+        </div>
+
+        <div>
+            <label for="SalesReferenceId">Sales Reference</label>
+            @(Html.Kendo().MultiColumnComboBoxFor(m => m.SalesReferenceId)
+                                                .Name("SalesReferenceId")
+                                                .Placeholder("Select Reference")
+                                                .DataTextField("ReferenceNumber")
+                                                .DataValueField("ReferenceId")
+                                                .Filter(FilterType.Contains)
+                                                .FilterFields(new[] { "ReferenceNumber", "RecordDate", "ContactName", "CompanyName" })
+                                                .BindTo((IEnumerable<ShiplogixQuotation.ViewModels.SalesReference>)ViewBag.SalesReference)
+                                                .Columns(cols =>
+                                                {
+                                                    cols.Add().Field("ReferenceNumber").Title("Reference No").Width("140px");
+                                                    cols.Add().Field("RecordDate").Title("Date").Width("120px")
+                                                        .Template("#= kendo.toString(kendo.parseDate(RecordDate), 'dd-MMM-yyyy') #");
+                                                    cols.Add().Field("ContactName").Title("Contact Name").Width("150px");
+                                                    cols.Add().Field("CompanyName").Title("Company").Width("200px");
+                                                })
+                                                .HtmlAttributes(new { id = "SalesReferenceId" })
+            )
+        </div>
+
+        <div>
+            <label for="SalesExecutiveId">Executive</label>
+            @(Html.Kendo().DropDownListFor(m => m.SalesExecutiveId)
+                                                .Name("SalesExecutiveId")
+                                                .OptionLabel("Select")
+                                                .DataTextField("Name")
+                                                .DataValueField("SalesExecutiveId")
+                                                .Filter(FilterType.Contains)
+                                                .BindTo((IEnumerable<ShiplogixQuotation.ViewModels.SalesExecutive>)ViewBag.SalesExecutive)
+                                                .HtmlAttributes(new { id = "SalesExecutiveId" })
+            )
+        </div>
+
+        <div>
+            <label for="Origin">Origin</label>
+            @Html.TextBoxFor(m => m.Origin, new { @class = "k-input k-textbox", id = "Origin" })
+        </div>
+
+        <div>
+            <label for="Destination">Destination</label>
+            @Html.TextBoxFor(m => m.Destination, new { @class = "k-input k-textbox", id = "Destination" })
+        </div>
+
+        <div>
+            <label for="ModeCode">Mode</label>
+            @(Html.Kendo().DropDownListFor(m => m.ModeCode)
+                                                .Name("ModeCode")
+                                                .OptionLabel("Select")
+                                                .DataTextField("ModeName")
+                                                .DataValueField("ModeCode")
+                                                .BindTo((IEnumerable<ShiplogixQuotation.ViewModels.ShipmentMode>)ViewBag.ShipmentMode)
+                                                .HtmlAttributes(new { id = "ModeCode" })
+            )
+        </div>
+
+        <div class="fetch-button-container">
+            <button id="fetchButton" type="submit">Fetch</button>
+            <button id="clearButton" type="button">Clear</button>
+        </div>
+
+    </div>
+}
+
+@(Html.Kendo().Grid<ShiplogixQuotation.ViewModels.QuotationViewModel>()
+                .Name("QuotationGrid")
+                .Groupable()
+                .Columns(columns =>
+                {
+                    columns.Bound(p => p.QuotationDate).Title("From Date").Format("{0:dd-MMM-yyyy}").Width(90);
+                    columns.Bound(p => p.ValidTill).Title("To Date").Format("{0:dd-MMM-yyyy}").Width(90);
+                    columns.Bound(p => p.CustomerName).Title("Customer").Width(150);
+                    columns.Bound(p => p.Origin).Title("Origin").Width(100);
+                    columns.Bound(p => p.Destination).Title("Destination").Width(100);
+                    columns.Bound(p => p.SalesOpsReference).Title("SalesReference").Width(150);
+                    columns.Bound(p => p.SalesExecutiveName).Title("SalesExecutive").Width(150);
+                    columns.Bound(p => p.ShipmentModeName).Title("Mode").Width(100);
+                    columns.Bound(c => c.QuotationId).Hidden();
+                    columns.Command(command =>
+    {
+        command.Custom("Edit")
+               .Click("onEditClick") // JavaScript function name
+               .HtmlAttributes(new { @class = "btn btn-sm btn-primary", title = "Edit" });
+    }).Title("Actions").Width(100);
+
+
+                })
+
+                .Pageable()
+                .Sortable()
+                .Filterable()
+                .Pageable(p => p.PageSizes(new[] { 5, 10, 20 }).Refresh(false))
+              
+                .DataSource(dataSource => dataSource
+                    .Ajax()
+                    .Group(groups =>
+                    {
+                    groups.Add(p => p.CustomerName);  // Pre-group by Customer
+                    groups.Add(p => p.SalesExecutiveName);
+                    })
+                    .Read(read => read.Action("GetQuotations", "Index").Data("filterData"))
+                    .PageSize(10)
+                    .Sort(sort => sort.Add("QuotationId").Descending())
+                   
+                )
+                 .AutoBind(true)
+)
+<script>
+    function filterData() {
+        return {
+            fromDate: $('#QuotationDate').val() || null,
+            toDate: $('#QuotationValidity').val() || null,
+            customerId: $('#CustomerId').val() || null,
+            quotationNumber: $('#SalesReferenceId').val() || '',
+            salesExecutiveId: $('#SalesExecutiveId').val() || null,
+            origin: $('#Origin').val() || '',
+            destination: $('#Destination').val() || '',
+            modeCode: $('#ModeCode').val() || null,
+            //customer: '' // optional
+        };
+    }
+
+    $(document).ready(function () {
+        var grid = $("#QuotationGrid").data("kendoGrid");
+
+        $('#fetchButton').click(function (e) {
+            e.preventDefault();
+            // Reload grid with filter data
+            grid.dataSource.page(1); // Reset to first page
+            grid.dataSource.read();
+        });
+
+        $('#clearButton').click(function (e) {
+            e.preventDefault();
+
+            // Reset all inputs
+            $('#QuotationDate').data("kendoDatePicker").value(null);
+            $('#QuotationValidity').data("kendoDatePicker").value(null);
+            $('#CustomerId').data("kendoMultiColumnComboBox").value("");
+            $('#SalesReferenceId').data("kendoMultiColumnComboBox").value("");
+            $('#SalesExecutiveId').data("kendoDropDownList").value("");
+            $('#Origin').val('');
+            $('#Destination').val('');
+            $('#ModeCode').data("kendoDropDownList").value("");
+
+            // Clear grid data by reading empty datasource or clearing it manually
+            grid.dataSource.data([]); // clear all data from grid
+            grid.refresh();
+        });
+    });
+</script>
+<script type="text/javascript">
+    function onEditClick(e) {
+        e.preventDefault(); // prevent default link behavior
+
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        var quotationId = dataItem.QuotationId;
+
+        if (quotationId && quotationId > 0) {
+            // Redirect to Edit page
+            window.location.href = '/Quotation/Edit/' + quotationId;
+        } else {
+            alert("Invalid Quotation ID.");
+        }
+    }
+</script>

@@ -1,0 +1,16 @@
+﻿@model ShiplogixQuotation.ViewModels.Attachment
+@{
+    ViewBag.Title = "FileNameEditor";
+}
+
+@using Kendo.Mvc.UI
+@(Html.HiddenFor(model => model))
+
+@(Html.Kendo().Upload()
+            .Name("files")
+            .Async(a => a
+                .Save("SaveFile", "Attachment")
+                .AutoUpload(true)
+            )
+            .Events(e => e.Success("onUploadSuccess"))
+)

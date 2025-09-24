@@ -1,0 +1,1450 @@
+﻿@model ShiplogixQuotation.ViewModels.QuotationViewModel
+@using ShiplogixQuotation.ViewModels
+
+@using Kendo.Mvc.UI
+
+@{
+    ViewBag.Title = (Model?.QuotationId > 0 ? "Edit Quotation" : "Create Quotation");
+}
+
+<style>
+    .quotation-card {
+        background: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+
+    .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .form-group {
+        flex: 1 1 calc(33.333% - 20px);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 300px;
+    }
+
+        .form-group label {
+            flex: 0 0 40%;
+            font-weight: 600;
+        }
+
+        .form-group .input-wrapper {
+            flex: 1;
+        }
+
+    .remarks-group {
+        flex: 1 1 100%;
+        align-items: flex-start;
+    }
+
+        .remarks-group label {
+            flex: 0 0 15%;
+        }
+
+        .remarks-group .input-wrapper {
+            flex: 1;
+        }
+
+    #CommodityGrid {
+        overflow-x: auto;
+        width: 100%;
+    }
+
+    .k-state-selected, .k-state-selected:link {
+        background-color: #337ab7;
+    }
+
+    .form-field {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+        .form-field .ff-label {
+            flex: 0 0 140px;
+            max-width: 140px;
+            text-align: left;
+            font-weight: 600;
+            padding-right: 4px;
+        }
+
+        .form-field .ff-control {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
+    .form-col {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .form-field .ff-control .k-dropdown,
+    .form-field .ff-control .k-combobox,
+    .form-field .ff-control .k-multicolumncombobox,
+    .form-field .ff-control .k-input,
+    .form-field .ff-control input,
+    .form-field .ff-control select,
+    .form-field .ff-control .form-control {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    @@media (max-width: 767.98px) {
+        .form-field {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+            .form-field .ff-label {
+                flex: 0 0 auto;
+                max-width: 100%;
+                padding-bottom: 6px;
+            }
+    }
+
+    .k-window .container-fluid.p-3 {
+        padding: 18px;
+    }
+
+    .k-primary, a#btnAddCommodity,
+    a#btnAddRoute, #attachmentsGrid a.k-button.k-button-icontext.k-grid-add {
+        color: #fff;
+        background-color: #608da7;
+        background-image: none, linear-gradient(to bottom, rgba(255, 255, 255, .25) 0, rgba(255, 255, 255, 0) 100%);
+    }
+
+
+
+    .k-input,
+    .k-dropdown .k-input {
+        padding: 6px 8px;
+        height: auto;
+    }
+
+    input[type="number"] {
+        -moz-appearance: textfield;
+    }
+
+    .ff-label.required::before {
+        content: " *";
+        color: red;
+        font-weight: 700;
+        margin-left: 4px;
+    }
+
+    .form-pair {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+        .form-pair .ff-label {
+            flex: 0 0 100px;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .form-pair .ff-control {
+            flex: 1;
+        }
+
+            .form-pair .ff-control .k-dropdown,
+            .form-pair .ff-control .k-combobox,
+            .form-pair .ff-control .k-multicolumncombobox,
+            .form-pair .ff-control .form-control,
+            .form-pair .ff-control input {
+                width: 100% !important;
+            }
+
+    .field-validation-error {
+        color: red;
+        white-space: nowrap;
+    }
+
+
+
+    .k-state-selected, .k-state-selected:link, .k-state-selected:visited {
+        background-color: #337ab7;
+    }
+</style>
+
+<body>
+
+    <div class="container-fluid mt-3">
+        @using (Html.BeginForm("Create", "Quotation", FormMethod.Post, new { id = "QuotationForm" }))
+
+
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.QuotationId)
+
+            <div id="notification"></div>
+
+            <div class="quotation-card">
+                <h4 class="mb-3 text-primary fw-bold">
+                    @(Model?.QuotationId > 0 ? "Edit Quotation" : "Create Quotation")
+                </h4>
+
+                <div class="form-row">
+
+                    <!-- Order Type -->
+                    <div class="form-group">
+                        <label>Order Type</label>
+                        <div class="input-wrapper">
+                            @(Html.Kendo().DropDownListFor(m => m.OrderTypeId)
+                                        .OptionLabel("Select")
+                                        .DataTextField("DocTypeDescription")
+                                        .DataValueField("OrderTypeId")
+                                        .Filter(FilterType.Contains)
+                                        .BindTo((IEnumerable<ShiplogixQuotation.ViewModels.OrderType>)ViewBag.OrderType)
+                            )
+                        </div>
+                    </div>
+
+                    <!-- Sales Executive -->
+                    <div class="form-group">
+                        <label>Sales Executive</label>
+                        <div class="input-wrapper">
+                            @(Html.Kendo().DropDownListFor(m => m.SalesExecutiveId)
+                                        .OptionLabel("Select")
+                                        .DataTextField("Name")
+                                        .DataValueField("SalesExecutiveId")
+                                        .Filter(FilterType.Contains)
+                                        .BindTo((IEnumerable<ShiplogixQuotation.ViewModels.SalesExecutive>)ViewBag.SalesExecutive)
+                            )
+                        </div>
+                    </div>
+
+                    <!-- Customer -->
+                    <div class="form-group">
+                        <label>Customer</label>
+                        <div class="input-wrapper">
+                            @(Html.Kendo().MultiColumnComboBoxFor(m => m.CustomerId)
+                                        .Name("CustomerId")
+                                        .Placeholder("Select Customer")
+                                        .DataTextField("CustomerName")
+                                        .DataValueField("CustomerId")
+                                        .Filter(FilterType.Contains)
+                                        .FilterFields(new[] { "CustomerName", "typ" })
+                                        .BindTo((IEnumerable<ShiplogixQuotation.ViewModels.Customer>)ViewBag.Customer)
+                                        .Columns(cols =>
+                                        {
+                                            cols.Add().Field("typ").Title("Type").Width("100px");
+                                            cols.Add().Field("CustomerName").Title("Customer Name").Width("200px");
+                                        })
+                            )
+                        </div>
+                    </div>
+
+                    <!-- Quotation Date -->
+                    <div class="form-group">
+                        <label>Quotation Date</label>
+                        <div class="input-wrapper">
+                            @(Html.Kendo().DatePickerFor(m => m.QuotationDate))
+                            @Html.ValidationMessageFor(m => m.QuotationDate, "", new { @class = "field-validation-error text-danger" })
+                        </div>
+                    </div>
+
+                    <!-- Quotation Validity -->
+                    <div class="form-group">
+                        <label>Quotation Validity</label>
+                        <div class="input-wrapper">
+                            @(Html.Kendo().DatePickerFor(m => m.QuotationValidity))
+                            @Html.ValidationMessageFor(m => m.QuotationValidity, "", new { @class = "field-validation-error text-danger" })
+                        </div>
+                    </div>
+
+                    <!-- Request Number -->
+                    <div class="form-group">
+                        <label>Request Number</label>
+                        <div class="input-wrapper">
+                            @Html.TextBoxFor(m => m.RequestNumber, new { @class = "k-input k-textbox" })
+                        </div>
+                    </div>
+
+                    <!-- Copy Quotation -->
+                    <div class="form-group">
+                        <label>Copy Quotation</label>
+                        <div class="input-wrapper">
+                            @Html.TextBoxFor(m => m.CopyQuotation, new { @class = "k-input k-textbox" })
+                        </div>
+                    </div>
+
+                    <!-- Shipment Mode -->
+                    <div class="form-group">
+                        <label>Shipment Mode</label>
+                        <div class="input-wrapper">
+                            @(Html.Kendo().DropDownListFor(m => m.ModeCode)
+                                        .OptionLabel("Select")
+                                        .DataTextField("ModeName")
+                                        .DataValueField("ModeCode")
+                                        .BindTo((IEnumerable<ShiplogixQuotation.ViewModels.ShipmentMode>)ViewBag.ShipmentModes)
+                            )
+                        </div>
+                    </div>
+
+                    <!-- Currency -->
+                    <div class="form-group">
+                        <label>Base Currency</label>
+                        <div class="input-wrapper">
+                            @(Html.Kendo().MultiColumnComboBoxFor(m => m.CurrencyId)
+                                        .Name("CurrencyId")
+                                        .Placeholder("Select Currency")
+                                        .DataTextField("CurrencyName")
+                                        .DataValueField("CurrencyId")
+                                        .Filter(FilterType.Contains)
+                                        .FilterFields(new[] { "CurrencyCode", "CurrencyName" })
+                                        .BindTo((IEnumerable<ShiplogixQuotation.ViewModels.Currency>)ViewBag.currencies)
+                                        .Columns(cols =>
+                                        {
+                                            cols.Add().Field("CurrencyCode").Title("Code").Width("80px");
+                                            cols.Add().Field("CurrencyName").Title("Name").Width("150px");
+                                        })
+                            )
+                        </div>
+                    </div>
+
+                    <!-- Sales Reference -->
+                    <div class="form-group">
+                        <label>Sales Ops.Reference</label>
+                        <div class="input-wrapper">
+                            @(Html.Kendo().MultiColumnComboBoxFor(m => m.SalesReferenceId)
+                                        .Name("SalesReferenceId")
+                                        .Placeholder("Select Reference")
+                                        .DataTextField("ReferenceNumber")
+                                        .DataValueField("ReferenceId")
+                                        .Filter(FilterType.Contains)
+                                        .FilterFields(new[] { "ReferenceNumber", "RecordDate", "ContactName", "CompanyName" })
+                                        .BindTo((IEnumerable<ShiplogixQuotation.ViewModels.SalesReference>)ViewBag.SalesReferences)
+                                        .Columns(cols =>
+                                        {
+                                            cols.Add().Field("ReferenceNumber").Title("Reference No").Width("140px");
+                                            cols.Add().Field("RecordDate").Title("Date").Width("120px")
+                                                .Template("#= kendo.toString(kendo.parseDate(RecordDate), 'dd-MMM-yyyy') #");
+                                            cols.Add().Field("ContactName").Title("Contact Name").Width("150px");
+                                            cols.Add().Field("CompanyName").Title("Company").Width("200px");
+                                        })
+                            )
+                        </div>
+                    </div>
+
+                    <!-- Origin -->
+                    <div class="form-group">
+                        <label class="ff-label required">Origin</label>
+                        <div class="input-wrapper">
+                            @Html.TextBoxFor(m => m.Origin, new { @class = "k-input k-textbox" })
+                            @Html.ValidationMessageFor(m => m.Origin, "", new { @class = "field-validation-error text-danger" })
+                        </div>
+                    </div>
+
+                    <!-- Destination -->
+                    <div class="form-group">
+                        <label class="ff-label required">Destination</label>
+                        <div class="input-wrapper">
+                            @Html.TextBoxFor(m => m.Destination, new { @class = "k-input k-textbox" })
+                            @Html.ValidationMessageFor(m => m.Destination, "", new { @class = "field-validation-error text-danger" })
+                        </div>
+                    </div>
+
+                    <!-- Remarks -->
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <label for="Remarks" style="width: 100px; margin-right: 60px;">Remarks</label>
+                        <textarea id="Remarks" name="Remarks" rows="2" style="flex: 1; padding: 5px;"></textarea>
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <div class="text-end mt-4">
+                    <button type="submit" id="btnSave" class="k-button k-primary k-rounded-md px-5">
+                        <span class="k-icon k-i-save"></span> Save
+                    </button>
+                </div>
+            </div>
+
+        }
+    </div>
+    <div id="ajaxSaveLoader" style="display:none; position: fixed; top: 60px; right: 30px; z-index: 10000; background: #fff; padding: 10px 15px; border-radius: 4px; box-shadow: 0 0 6px rgba(0,0,0,0.2); font-weight: bold; color: #608da7;">
+        <span class="k-icon k-i-loading"></span> Saving...
+    </div>
+
+
+    @* =======================
+        Commodity panel + grid
+        ======================= *@
+    @(Html.Kendo().PanelBar()
+                                            .Name("QuotationDetailsPanelBar")
+                                            .ExpandMode(PanelBarExpandMode.Multiple)
+                                            .Items(items =>
+                                            {
+                                                items.Add()
+                                                    .Text("Commodities")
+                                                    .Expanded(false)
+                                                    .Content(@<text>
+                                                        @Html.AntiForgeryToken()
+
+                                                        @(Html.Kendo().Grid<ShiplogixQuotation.ViewModels.CommodityDetails>()
+                                                                                                    .Name("CommodityGrid")
+                                                                                                    .AutoBind(true)
+                                                                                                    .ToolBar(tb =>
+                                                                                                    {
+                                                                                                                tb.Custom()
+                                                                  .Text("➕ Add Commodity")
+                                                                  .HtmlAttributes(new { id = "btnAddCommodity", type = "button" });
+                                                                                                            })
+                                                                                                    .Columns(cols =>
+                                                                                                    {
+                                                                                                                cols.ForeignKey(c => c.CommodityId,
+                                                                                (System.Collections.IEnumerable)ViewBag.Commodity,
+                                                                                "CommodityId", "CommodityName")
+                                                                    .Title("Commodity")
+                                                                    .Width(150)
+                                                                    .EditorTemplateName("CommodityDropDownEditor");
+                                                                                                    cols.Bound(c => c.UnitType).Title("Unit Type").Width(120);
+                                                                                                    cols.Bound(c => c.TypeQty).Title("Type Qty").Width(100);
+                                                                                                    cols.Bound(c => c.GrossWeight).Title("Gross Weight").Width(120);
+                                                                                                    cols.Bound(c => c.NetWeight).Title("NetWeight").Width(120);
+                                                                                                    cols.Bound(c => c.Volume).Title("Gross Volume").Width(120);
+                                                                                                    cols.Bound(c => c.VolumetricWeight).Title("Volumetric Weight").Width(120);
+                                                                                                    cols.Bound(c => c.Hazardous).Title("Dangerous Container").Width(150);
+                                                                                                    cols.Bound(c => c.Reefer).Title("Reefer").Width(120);
+                                                                                                    cols.Bound(c => c.OverSize).Title("Oversize").Width(120);
+                                                                                                    cols.Bound(c => c.Ventilation).Title("Ventilation").Width(120);
+                                                                                                    cols.Command(cmd =>
+                                                                                                    {
+                                                                                                    cmd.Edit().Text("").HtmlAttributes(new { @class = "btn btn-sm btn-primary" });
+                                                                                                    cmd.Destroy().Text("").HtmlAttributes(new { @class = "btn btn-sm btn-danger" });
+                                                                                                    }).Title("Actions").Width(200);
+                                                                                                    })
+                                                                                                    .Editable(edit => edit.Mode(GridEditMode.InLine))
+                                                                                                    .Scrollable(s => s.Height("auto"))
+                                                                                                    .Sortable()
+                                                                                                    .Filterable()
+                                                                                                    .Pageable(p => p.PageSizes(new[] { 5, 10, 20 }).Refresh(true))
+                                                                                                    .DataSource(ds => ds.Ajax()
+                                                                                                    .PageSize(10)
+                                                                                                    .Read(r => r.Action("GetCommodities", "Quotation").Data("getQuotationId"))
+                                                                                                    .Create(c => c.Action("SaveCommodityDetail", "Quotation").Data("function(data) { return addAntiForgeryToken(data); }"))
+                                                                                                    .Update(u => u.Action("UpdateCommodity", "Quotation").Data("function(data) { return addAntiForgeryToken(data); }"))
+                                                                                                    .Destroy(d => d.Action("DeleteCommodity", "Quotation").Data("function(data) { return addAntiForgeryToken(data); }"))
+                                                                                                    .Events(e => e.RequestEnd("onCommodityRequestEnd"))
+                                                                                                    .Model(m =>
+                                                                                                    {
+                                                                                                    m.Id(c => c.CommodityDetailId);
+                                                                                                    m.Field(c => c.CommodityId);
+                                                                                                    m.Field(c => c.QuotationId);
+                                                                                                     })
+                                                                                                    )
+                                                        )
+                                                    </text>);
+                                            })
+    )
+
+    @(Html.Kendo().PanelBar()
+                                    .Name("RouteDetails")
+                                    .ExpandMode(PanelBarExpandMode.Multiple)
+                                    .Items(items =>
+                                    {
+                                        items.Add()
+                                            .Text("Route")
+                                            .Expanded(false)
+                                            .Content(@<text>
+                                                @Html.AntiForgeryToken()
+                                                @(Html.Kendo().Grid<ShiplogixQuotation.ViewModels.RouteViewModel>()
+                                                                                    .Name("RouteGrid")
+                                                                                    .AutoBind(true)
+                                                                                    .ToolBar(tb =>
+                                                                                    {
+                                                                                        tb.Custom()
+                                                      .Text("➕ Add Route")
+                                                      .HtmlAttributes(new { id = "btnAddRoute", type = "button" });
+                                                                                    })
+                                                                                    .Columns(cols =>
+                                                                                    {
+                                                                                        cols.Bound(r => r.Mode).Title("*Mode").Width(120);
+                                                                                        cols.Bound(r => r.OriginPortName).Title("*Origin").Width(140);
+                                                                                        cols.Bound(r => r.DestinationPortName).Title("*Destination").Width(140);
+                                                                                        cols.Bound(r => r.BuyingRate).Title("BuyingRate").Width(80);
+                                                                                        cols.Bound(r => r.SellingRate).Title("SellingRate").Width(80);
+                                                                                        cols.Bound(r => r.TSP1PortId).Title("TSP1").Width(80);
+                                                                                        cols.Bound(r => r.Duration).Title("Duration").Width(100);
+                                                                                        cols.Bound(r => r.Type).Title("Type").Width(100);
+                                                                                        cols.Bound(r => r.Terms).Title("Terms").Width(100);
+
+                                                                                        cols.Command(cmd =>
+                                                                                        {
+                                                                                            cmd.Edit().Text("").HtmlAttributes(new { @class = "btn btn-sm btn-primary" });
+                                                                                            cmd.Destroy()
+                                                                       .Text("")
+                                                                       .HtmlAttributes(new { @class = "btn btn-sm btn-danger" });
+                                                                                        }).Title("Actions").Width(160);
+                                                                                    })
+                                                                                    .Editable(edit => edit.Mode(GridEditMode.InLine))
+                                                                                    .Scrollable(s => s.Height("auto"))
+                                                                                    .Sortable()
+                                                                                    .Filterable()
+                                                                                    .Pageable(p => p.PageSizes(new[] { 5, 10, 15 }).Refresh(true))
+                                                                                    .DataSource(ds => ds.Ajax()
+                                                                                        .PageSize(10)
+                                                                                        .Read(r => r.Action("GetRoutes", "Quotation").Data("getQuotationId"))
+                                                                                        .Create(c => c.Action("CreateRoute", "Quotation").Data("function(data) { return addAntiForgeryToken(data); }"))
+                                                                                        .Update(u => u.Action("UpdateRoute", "Quotation").Data("function(data) { return addAntiForgeryToken(data); }"))
+                                                                                        .Destroy(d => d.Action("DeleteRoute", "Quotation").Data("function(data) { return addAntiForgeryToken(data); }"))
+                                                                                        .Events(e => e.RequestEnd("onRouteRequestEnd"))
+                                                                                        .Model(m => m.Id(r => r.RouteId))
+                                                                                    )
+                                                )
+                                            </text>);
+                                    })
+    )
+
+
+    @(Html.Kendo().PanelBar()
+                            .Name("AttachmentFile")
+                            .ExpandMode(PanelBarExpandMode.Multiple)
+                            .Items(items =>
+                            {
+                                items.Add()
+                                    .Text("Attachments")
+                                    .Expanded(false)
+                                    .Content(@<text>
+                                        @(Html.Kendo().Grid<ShiplogixQuotation.ViewModels.Attachment>()
+                                                                    .Name("attachmentsGrid")
+                                                                    .ToolBar(toolbar =>
+                                                                    {
+                                                                                toolbar.Create();
+                                                                            })
+                                                                    .Columns(columns =>
+                                                                    {
+                                                                                columns.Bound(a => a.FileType)
+                                                               .Title("Type")
+                                                               .Width(150)
+                                                               .EditorTemplateName("AttachmentTypeEditor");
+                                                                    // .Filterable(ftb => ftb.UI("typeFilter"));
+
+                                                                    columns.Bound(a => a.FileName)
+                                                                                       .Title("File")
+                                                                                       .Width(250)
+                                                                                       .EditorTemplateName("FileNameEditor")
+                                                                                       .ClientTemplate("<a href='/Attachment/Download?fileName=#= FileName #' target='_blank'>#= FileName #</a>");
+                                                                    // .Filterable(ftb => ftb.UI("fileFilter"));
+
+                                                                    columns.Command(cmd =>
+                                                                                {
+                                                                                            cmd.Edit()
+                                                                                   .Text("")
+                                                                                   .HtmlAttributes(new { @class = "btn btn-sm btn-primary" });
+
+                                                                                            cmd.Destroy()
+                                                                                   .Text("")
+                                                                                   .HtmlAttributes(new { @class = "btn btn-sm btn-danger" });
+                                                                                        }).Title("Actions").Width(120);
+                                                                            })
+                                                                    .Editable(edit => edit.Mode(GridEditMode.InLine))
+                                                                    .Pageable()
+                                                                    .Sortable()
+                                                                    .Filterable()
+                                                                    .DataSource(dataSource => dataSource
+                                                                        .Ajax()
+                                                                        .PageSize(5)
+                                                                        .Model(m =>
+                                                                        {
+                                                                                    m.Id(f => f.Id);
+                                                                                    m.Field(f => f.QuotationId)
+                                                             .DefaultValue(@Model.QuotationId); // Pass value from page
+                                                                    })
+                                                                        .Read(read => read.Action("GetAttachments", "Attachment").Data("getQuotationId"))
+                                                                        .Create(create => create.Action("CreateAttachment", "Attachment")
+                                                                                                .Data("function(data) { return addAntiForgeryToken(data); }"))
+                                                                        .Update(update => update.Action("UpdateAttachment", "Attachment")
+                                                                                                .Data("function(data) { return addAntiForgeryToken(data); }"))
+                                                                        .Destroy(destroy => destroy.Action("DeleteAttachment", "Attachment")
+                                                                                                  .Data("function(data) { return addAntiForgeryToken(data); }"))
+                                                                    )
+                                        )
+                                    </text>);
+                            })
+    )
+
+    @(Html.Kendo().Window()
+                    .Name("RouteWindow")
+                    .Title("Route")
+                    .Visible(false)
+                    .Modal(true)
+                    .Draggable(true)
+                    .Resizable()
+                    .Width(1100)
+                    .Actions(a => a.Close())
+                    .Content(@<text>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" id="QuotationId" name="QuotationId" value="@ViewBag.QuotationId" />
+                        <div class="container-fluid p-3">
+                            <div class="form-row">
+
+                                <!-- ROW 1 -->
+                                <div class="form-group">
+                                    <label class="ff-label required">Mode</label>
+                                    @(Html.Kendo().DropDownList()
+                                                        .Name("Mode")
+                                                        .HtmlAttributes(new { @class = "form-control" })
+                                                        .OptionLabel("Select Mode")
+                                                        .DataTextField("Text")
+                                                        .DataValueField("Value")
+                                                        .BindTo(new List<object> {
+                                                        new { Text = "BARGE", Value = "BARGE" },
+                                                        new { Text = "OCEAN", Value = "OCEAN" },
+                                                        new { Text = "AIR", Value = "AIR" }
+                                                        })
+                                    )
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="ProviderId" class="ff-label">Provider</label>
+                                    @(Html.Kendo().DropDownList()
+                                                        .Name("ProviderId")
+                                                        .HtmlAttributes(new { @class = "form-control" })
+                                                        .OptionLabel("Select Provider")
+                                                        .DataTextField("Name")
+                                                        .DataValueField("ProviderId")
+                                                        .BindTo(new List<object> {
+                                                        new { Name = "Provider A", ProviderId = "1" },
+                                                        new { Name = "Provider B", ProviderId = "2" }
+                                                        })
+                                    )
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="ff-label required">Origin</label>
+                                    @(Html.Kendo().MultiColumnComboBox()
+                                                        .Name("OriginPortId")
+                                                        .Placeholder("Select port...")
+                                                        .DataTextField("Name")
+                                                        .DataValueField("PortId")
+                                                        .Filter(FilterType.Contains)
+                                                        .MinLength(1)
+                                                        .Columns(c =>
+                                                        {
+                                                        c.Add().Field("Code").Title("Code").Width(80);
+                                                        c.Add().Field("Name").Title("Name").Width(260);
+                                                        c.Add().Field("Country").Title("Country").Width(140);
+                                                                            })
+                                                        .DataSource(ds => ds.Read(r => r.Action("GetPorts", "Quotation")))
+                                    )
+                                </div>
+
+                                <!-- ROW 2 -->
+                                <div class="form-group">
+                                    <label class="ff-label required">Destination</label>
+                                    @(Html.Kendo().MultiColumnComboBox()
+                                                        .Name("DestinationPortId")
+                                                        .Placeholder("Select destination...")
+                                                        .DataTextField("Name")
+                                                        .DataValueField("PortId")
+                                                        .Filter(FilterType.Contains)
+                                                        .MinLength(1)
+                                                        .Columns(c =>
+                                                        {
+                                                        c.Add().Field("Code").Title("Code").Width(80);
+                                                        c.Add().Field("Name").Title("Name").Width(260);
+                                                        c.Add().Field("Country").Title("Country").Width(140);
+                                                                            })
+                                                        .DataSource(ds => ds.Read(r => r.Action("GetPorts", "Quotation")))
+                                    )
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="ff-label required">TSP1</label>
+                                    @(Html.Kendo().DropDownList()
+                                                        .Name("TSP1PortId")
+                                                        .OptionLabel("Select")
+                                                        .DataTextField("Name")
+                                                        .DataValueField("PortId")
+                                                        .MinLength(1)
+                                                        .DataSource(ds => ds.Read(r => r.Action("GetPorts", "Quotation")))
+                                    )
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="ff-label required">TSP2</label>
+                                    @(Html.Kendo().DropDownList()
+                                                        .Name("TSP2PortId")
+                                                        .OptionLabel("Select")
+                                                        .DataTextField("Name")
+                                                        .DataValueField("PortId")
+                                                        .DataSource(ds => ds.Read(r => r.Action("GetPorts", "Quotation")))
+                                    )
+                                </div>
+
+                                <!-- ROW 3 -->
+                                <div class="form-group">
+                                    <label class="ff-label required">TSP3</label>
+                                    @(Html.Kendo().DropDownList()
+                                                        .Name("TSP3PortId")
+                                                        .OptionLabel("Select")
+                                                        .DataTextField("Name")
+                                                        .DataValueField("PortId")
+                                                        .DataSource(ds => ds.Read(r => r.Action("GetPorts", "Quotation")))
+                                    )
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="ff-label">Duration</label>
+                                    <input id="Duration" name="Duration" class="form-control" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="ff-label">Buying Rate</label>
+                                    <input id="BuyingRate" name="BuyingRate" type="number" class="form-control" step="0.01" />
+                                </div>
+
+                                <!-- ROW 4 -->
+                                <div class="form-group">
+                                    <label class="ff-label">Selling Rate</label>
+                                    <input id="SellingRate" name="SellingRate" type="number" class="form-control" step="0.01" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="ff-label">Type</label>
+                                    @Html.TextBox("Type", null, new { @class = "form-control" })
+                                </div>
+
+                                <!-- ROW 5 -->
+                                <div class="form-group">
+                                    <label class="ff-label">Terms</label>
+                                    @(Html.Kendo().DropDownList()
+                                                        .Name("Terms")
+                                                        .OptionLabel("Select Terms")
+                                                        .BindTo(new List<string> { "FOB", "CIF", "EXW" })
+                                    )
+                                </div>
+
+                                <!-- Empty cells for layout consistency -->
+                                <div class="col-md-4"></div>
+                                <div class="col-md-4"></div>
+
+                                <!-- Buttons -->
+                                <div class="col-12 text-end mt-2">
+                                    <button id="btnSaveRoute" class="k-button k-primary" type="button">
+                                        <span class="k-icon k-i-check"></span> Save
+                                    </button>
+                                    <button id="btnCancelEdit" class="k-button" type="button">
+                                        <span class="k-icon k-i-cancel"></span> Cancel
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </text>)
+    )
+
+    @* =======================*@
+    @(Html.Kendo().Window()
+            .Name("CommodityWindow")
+            .Title("Cargo Info")
+            .Visible(false)
+            .Modal(true)
+            .Draggable(true)
+            .Resizable()
+            .Width(960)
+            .Content(@<text>
+                @Html.AntiForgeryToken()
+
+                <div class="container-fluid p-3">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="ff-label required" for="CommodityId">Commodity</label>
+                            @(Html.Kendo().DropDownList()
+                                        .Name("CommodityId")
+                                        .OptionLabel("Select Commodity")
+                                        .DataTextField("CommodityName")
+                                        .DataValueField("CommodityId")
+                                        .Filter(FilterType.Contains)
+                                        .HtmlAttributes(new { @class = "form-control" })
+                                        .BindTo((IEnumerable<ShiplogixQuotation.ViewModels.Commodity>)ViewBag.Commodity)
+                            )
+                        </div>
+
+                        <div class="form-group">
+                            <label class="ff-label required" for="unitytpe">Unit Type</label>
+                            <input type="text" id="unitytpe" class="form-control" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="ff-label required" for="TypeQty">Type Qty</label>
+                            <input type="text" id="TypeQty" class="form-control" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="Length">Length (M)</label>
+                            <input type="text" id="Length" class="form-control" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="Height">Height (M)</label>
+                            <input type="text" id="Height" class="form-control" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="Width">Width (M)</label>
+                            <input type="text" id="Width" class="form-control" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="ff-label required" for="GrossWeight">Gross Weight</label>
+                            <input type="text" id="GrossWeight" class="form-control" />
+                            
+                        </div>
+
+                        <div class="form-group">
+                            <label class="ff-label required" for="Volume">Volume</label>
+                            <input type="text" id="Volume" class="form-control" />                          
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="VolumetricWeight">Volumetric Weight</label>
+                            <input type="text" id="VolumetricWeight" class="form-control" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="NetWeight">Net Weight</label>
+                            <input type="text" id="NetWeight" class="form-control" />
+                        </div>
+
+                       
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <div class="form-check">
+                            <input type="checkbox" id="Hazardous" class="form-check-input" />
+                            <label for="Hazardous" class="form-check-label fw-bold">Hazardous</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" id="OverSize" class="form-check-input" />
+                            <label for="OverSize" class="form-check-label fw-bold">Oversize</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" id="Reefer" class="form-check-input" />
+                            <label for="Reefer" class="form-check-label fw-bold">Reefer</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" id="Ventilation" class="form-check-input" />
+                            <label for="Ventilation" class="form-check-label fw-bold">Ventilation</label>
+                        </div>
+                    </div>
+
+                    <div class="text-end mt-4">
+                        <button type="button" class="btn btn-warning text-white fw-bold" id="btnSaveCommodity">
+                            <i class="k-icon k-i-save"></i> Save
+                        </button>
+                    </div>
+                </div>
+            </text>)
+    )
+
+</body>
+
+
+<script>
+
+    $(document).ready(function () {
+        var grid = $("#CommodityGrid").data("kendoGrid");
+
+        grid.bind("edit", function (e) {
+            // When creating a new row, set the QuotationId from the ViewModel
+            if (e.model.isNew()) {
+                e.model.set("QuotationId", @Model.QuotationId);
+            }
+        });
+    });
+    $(document).ready(function () {
+        var grid = $("#RouteGrid").data("kendoGrid");
+
+        grid.bind("edit", function (e) {
+            // When creating a new row, set the QuotationId from the ViewModel
+            if (e.model.isNew()) {
+                e.model.set("QuotationId", @Model.QuotationId);
+            }
+        });
+    });
+
+    function onUploadSuccess(e) {
+        if (e.operation === "upload" && e.response && e.response.FileName) {
+            var uploadedFilePath = e.response.FileName;
+
+            var grid = $("#attachmentsGrid").data("kendoGrid");
+            var row = grid.editable.element.closest("tr");
+            var dataItem = grid.dataItem(row);
+
+            dataItem.set("FileName", uploadedFilePath);
+            row.find("input[name='FileName']").val(uploadedFilePath);
+        }
+    }
+
+
+
+        function addAntiForgeryToken(data) {
+            data = data || {};
+            var token = $('input[name="__RequestVerificationToken"]').val();
+            if (token) {
+                data.__RequestVerificationToken = token;
+            }
+            return data;
+        }
+
+
+        function commodityDropDownEditor(container, options) {
+            $('<input required data-text-field="CommodityName" data-value-field="CommodityId" data-bind="value:' + options.field + '" />')
+                .appendTo(container)
+                .kendoDropDownList({
+                    autoBind: false,
+                    dataSource: {
+                        transport: {
+                            read: {
+                                url: "/Quotation/GetCommodities", 
+                            }
+                        }
+                    }
+                });
+        }
+
+        var notification = $("#notification").kendoNotification({
+            position: {
+                pinned: true,
+                top: 30,
+                right: 30
+            },
+            autoHideAfter: 3000,
+            stacking: "down",
+            templates: [{
+                type: "success",
+                template: "<div class='k-notification-success'>#= message #</div>"
+            }]
+        }).data("kendoNotification");
+
+        function onCommodityRequestEnd(e) {
+            if (e.type === "update" && e.response && e.response.Errors == null) {
+                alert("Commodity updated successfully!"); 
+            }
+            if (e.type === "destroy" && e.response && e.response.Errors == null) {
+                alert("Commodity deleted successfully!");
+            }
+            if (e.type === "create" && e.response && e.response.Errors == null) {
+                alert("Commodity added successfully!");
+            }
+        }
+        function onRouteRequestEnd(e) {
+            if (e.type === "update" && e.response && !e.response.Errors) {
+                alert("Route updated successfully!");
+            }
+            if (e.type === "destroy" && e.response && !e.response.Errors) {
+                alert("Route deleted successfully!");
+            }
+            if (e.type === "create" && e.response && !e.response.Errors) {
+                alert("Route added successfully!");
+            }
+        }
+
+
+
+
+
+
+      // Optional temporary client-side id counter (not required for server-saved rows)
+      var newId = 0;
+
+      // ---------- helpers ----------
+      function token() {
+        return $('#QuotationForm input[name="__RequestVerificationToken"]').val();
+      }
+
+      function nInt(v) {
+        var x = parseInt(v, 10);
+        return isNaN(x) ? 0 : x;
+      }
+
+      function nFloat(v) {
+        var x = parseFloat(v);
+        return isNaN(x) ? null : x;
+      }
+
+      // return the Kendo Grid instance
+      function grid() {
+        return $('#CommodityGrid').data('kendoGrid');
+      }
+
+      // return the Kendo Window instance
+      function win() {
+        return $('#CommodityWindow').data('kendoWindow');
+      }
+
+      // provide the QuotationId param for grid reads
+      function getQuotationId() {
+        var q = parseInt($('#QuotationId').val() || '0', 10);
+        console.log('getQuotationId ->', q);
+        return { quotationId: q };
+      }
+
+      // debug helper to check for duplicate QuotationId inputs
+    function logQuotationIdInputs() {
+        $('input[name="QuotationId"]').each(function (i, el) {
+            console.log('QuotationId input[' + i + ']: id=' + (el.id || '<no-id>') + ' value=' + $(el).val());
+        });
+    }
+
+
+    function refreshCommodityGridWithCurrentQuotationId() {
+    var g = grid();
+    var qid = parseInt($('#QuotationId').val() || '0', 10);
+    console.log("Refreshing CommodityGrid for quotationId:", qid);
+    if (g && g.dataSource) {
+    // Explicit param ensures the request carries the exact current QuotationId
+    g.dataSource.read();
+    g.dataSource.page(1);
+    } else {
+    console.warn("CommodityGrid not found when trying to refresh.");
+    }
+    }
+
+    // optional dataBound logging
+    function onCommodityDataBound(e) {
+    try {
+    var ds = e.sender.dataSource;
+    console.log('CommodityGrid dataBound. total=', ds.total(), 'page=', ds.page());
+    } catch (err) {
+    console.warn('onCommodityDataBound error', err);
+    }
+    }
+
+    // ---------- document ready: attach handlers ----------
+    (function () {
+    $(document).ready(function () {
+    // log existing QuotationId inputs for debugging
+    logQuotationIdInputs();
+
+    // If the grid is inside a collapsed PanelBar content, it may be initialized later;
+    // attach a repeated logger to be safe:
+    (function attachLogger() {
+    var g = grid();
+    if (!g) {
+    setTimeout(attachLogger, 250);
+    return;
+    }
+    // attach only once
+    if (!g._myDataBoundAttached) {
+    g._myDataBoundAttached = true;
+    g.bind('dataBound', function (e) {
+    try {
+    console.log('CommodityGrid dataBound (logger). total=', e.sender.dataSource.total());
+    } catch (ex) { console.warn('logger ex:', ex); }
+    });
+    }
+    })();
+
+    // Add Commodity button (delegated because Kendo renders toolbar)
+    $(document).on('click', '#btnAddCommodity', function (ev) {
+    ev.preventDefault();
+    var q = parseInt($('#QuotationId').val() || '0', 10);
+    if (!q) {
+    alert('First Create Quotation.');
+    return;
+    }
+    var w = win();
+    if (w) {
+    w.center().open();
+    } else {
+    console.warn('CommodityWindow not found.');
+    }
+    });
+    
+    // Save Commodity handler
+    $(document).on('click', '#btnSaveCommodity', function (ev) {
+    ev.preventDefault();
+
+    // pick the correct selector for your quotation id input
+    var raw = $('#QuotationId').val();           // <-- fix selector here
+        var qId = parseInt(raw, 10);
+        if (!Number.isInteger(qId) || qId <= 0) {
+                  alert('First Create Quotation.');
+                  return;
+        }
+
+    // now qId is a positive integer and you can use it safely
+
+
+            var commodityDDL = $('#CommodityId').data('kendoDropDownList');
+            var commodityIdValue = commodityDDL ? nInt(commodityDDL.value()) : nInt($('#CommodityId').val());
+
+            var dto = {
+              QuotationId: qId,
+              CommodityId: commodityIdValue,
+              UnitType: ($('#unitytpe').val() || '').trim(),
+              TypeQty: nInt($('#TypeQty').val()),
+
+              Length: nFloat($('#Length').val()),
+              Width: nFloat($('#Width').val()),
+              Height: nFloat($('#Height').val()),
+
+              GrossWeight: (function(){ var v = parseFloat($('#GrossWeight').val()); return isNaN(v) ? 0 : v; })(),
+              Volume:      (function(){ var v = parseFloat($('#Volume').val());      return isNaN(v) ? 0 : v; })(),
+
+              VolumetricWeight: nFloat($('#VolumetricWeight').val()),
+              NetWeight:        nFloat($('#NetWeight').val()),
+            
+              Hazardous:   $('#Hazardous').is(':checked'),
+              OverSize:    $('#OverSize').is(':checked'),
+              Reefer:      $('#Reefer').is(':checked'),
+              Ventilation: $('#Ventilation').is(':checked')
+            };
+
+            // client-side validation
+            if (!dto.CommodityId) { alert('Select a Commodity.'); return; }
+            if (!dto.UnitType)    { alert('Unit Type is required.'); return; }
+            if (!dto.TypeQty)     { alert('Type Qty is required.'); return; }
+            if (!dto.GrossWeight) { alert('Gross Weight is required.'); return; }
+            if (!dto.Volume)      { alert('Volume is required.'); return; }
+
+            console.log('Saving commodity DTO:', dto);
+
+            $.ajax({
+              url: '@Url.Action("SaveCommodityDetail","Quotation")',
+              type: 'POST',
+              data: $.extend({}, dto, { __RequestVerificationToken: token() }),
+              success: function (res) {
+                console.log('SaveCommodityDetail response:', res);
+                console.log("Hidden #QuotationId now:", $('#QuotationId').val());
+
+                if (res && res.success) {
+                  // If server returned the saved item, add immediately (no read required)
+                  if (res.item) {
+                    var g = grid();
+                    if (g && g.dataSource) {
+                      g.dataSource.add(res.item);
+                      g.dataSource.page(1);
+                    }
+                  } else {
+                    // explicit read using current QuotationId to avoid mismatch
+                    refreshCommodityGridWithCurrentQuotationId();
+                  }
+
+                  var w = win();
+                  if (w) w.close();
+                } else {
+                  alert((res && res.message) ? res.message : 'Save failed.');
+                  console.error('Save failed payload:', res);
+                }
+              },
+              error: function (xhr) {
+                var m = (xhr.responseJSON && xhr.responseJSON.message) || xhr.responseText || xhr.statusText;
+                alert('Save error: ' + m);
+                console.error('AJAX error:', xhr);
+              }
+              });
+
+          });
+
+
+          });
+
+      })();
+
+
+
+    /* -------------------------
+       Global AJAX & helpers
+       ------------------------- */
+
+    // ensure the anti-forgery token is sent on AJAX (header) for JSON posts
+    $(function () {
+      var tokenVal = $('input[name="__RequestVerificationToken"]').val();
+      if (tokenVal) {
+        $.ajaxSetup({
+          beforeSend: function (xhr, settings) {
+            // attach commonly-accepted header names for MVC antiforgery
+            xhr.setRequestHeader('RequestVerificationToken', tokenVal);
+            xhr.setRequestHeader('__RequestVerificationToken', tokenVal);
+          }
+        });
+        console.log('Global AJAX anti-forgery header configured.');
+      } else {
+        console.warn('Anti-forgery token not found in DOM; JSON POSTs will need token header manually.');
+      }
+    });
+
+    // helper to return object for Kendo .Data("getQuotationId")
+    function getQuotationId() {
+      var v = $('#QuotationForm input[name="QuotationId"]').val();
+      if (!v) v = $('input[name="QuotationId"]').first().val();
+      var n = parseInt(v || '0', 10);
+      return { quotationId: isNaN(n) ? 0 : n };
+    }
+
+    // numeric value helper (use when building DTO)
+    function getQuotationIdValue() {
+      var v = $('#QuotationForm input[name="QuotationId"]').val();
+      if (!v) v = $('input[name="QuotationId"]').first().val();
+      var n = parseInt(v || '0', 10);
+      return isNaN(n) ? 0 : n;
+    }
+
+    function nInt(v) {
+      var x = parseInt(v, 10);
+      return isNaN(x) ? 0 : x;
+    }
+    function nFloat(v) {
+      var x = parseFloat(v);
+      return isNaN(x) ? null : x;
+    }
+
+    // read Kendo widget value or fallback to input val()
+    function widgetValue(selector) {
+      var $el = $(selector);
+      if (!$el || !$el.length) return '';
+      var ddl = $el.data('kendoDropDownList');
+      if (ddl) return ddl.value();
+      var mcc = $el.data('kendoMultiColumnComboBox');
+      if (mcc) return mcc.value();
+      var combo = $el.data('kendoComboBox');
+      if (combo) return combo.value();
+      return $el.val();
+    }
+
+    
+
+    function buildRouteDto() {
+      var qId = getQuotationIdValue();
+      return {
+        QuotationId: qId,
+        Mode: widgetValue('#Mode') || '',
+        ProviderId: nInt(widgetValue('#ProviderId') || '0'),
+        OriginPortId: nInt(widgetValue('#OriginPortId') || '0'),
+        DestinationPortId: nInt(widgetValue('#DestinationPortId') || '0'),
+        TSP1PortId: nInt(widgetValue('#TSP1PortId') || '0'),
+        TSP2PortId: nInt(widgetValue('#TSP2PortId') || '0'),
+        TSP3PortId: nInt(widgetValue('#TSP3PortId') || '0'),
+        Duration: ($('#Duration').val() || '').trim(),
+        BuyingRate: parseFloat($('#BuyingRate').val() || '0'),
+        SellingRate: parseFloat($('#SellingRate').val() || '0'),
+        Type: ($('#Type').val() || '').trim(),
+        Terms: widgetValue('#Terms') || ''
+      };
+    }
+
+    // central handler for server responses (supports both shapes)
+    function handleRouteSaveResponse(res) {
+      console.log('CreateRoute response (normalized):', res);
+
+      // normalize keys lowercased to handle Data/Data etc.
+      var normalized = {};
+      for (var k in res) {
+        if (Object.prototype.hasOwnProperty.call(res, k)) {
+          normalized[k.toLowerCase()] = res[k];
+        }
+      }
+
+      var successFlag = (res && (res.success === true || normalized['success'] === true));
+      var data = normalized['data'];
+      var errors = normalized['errors'] || normalized['modelstate'] || normalized['modelState'];
+
+      var g = $('#RouteGrid').data('kendoGrid');
+      var qid = getQuotationIdValue();
+
+      // CASE: custom { success:true, item }
+      if (successFlag) {
+        var item = res.item || normalized['item'];
+        if (item && g && g.dataSource) {
+          g.dataSource.add(item);
+          g.dataSource.page(1);
+        } else if (g && g.dataSource) {
+          g.dataSource.read({ quotationId: qid });
+        }
+          $('#RouteWindow').data('kendoWindow') ?.close();
+        return;
+      }
+
+      // CASE: Kendo DataSourceResult (Data + Total + Errors)
+      if (data !== undefined) {
+        if (errors && Object.keys(errors).length > 0) {
+          console.error('Server returned validation errors:', errors);
+          // show first error field message if possible
+          var firstKey = Object.keys(errors)[0];
+          var firstErr = errors[firstKey] && errors[firstKey].errors ? errors[firstKey].errors[0] : null;
+          alert(firstErr || 'Save failed: server validation error. See console for details.');
+          return;
+        }
+
+        if (g && g.dataSource) {
+          g.dataSource.read({ quotationId: qid });
+        }
+        $('#RouteWindow').data('kendoWindow')?.close();
+        return;
+      }
+
+      // fallback
+      var msg = (res && res.message) || 'Save failed';
+      alert(msg);
+      console.error('Unexpected CreateRoute response:', res);
+    }
+
+    // save via AJAX (JSON + header; falls back to form-encoded if server requires)
+    function saveRouteAjax(dto, $btn) {
+      console.log('Saving route DTO (before send):', dto);
+
+      var tokenVal = $('input[name="__RequestVerificationToken"]').val() || $('input[name="__RequestVerificationToken"]').first().val();
+      if (!tokenVal) {
+        console.warn('Anti-forgery token not found in DOM; request may be rejected by server.');
+      }
+
+      // Try JSON + header first
+      $.ajax({
+        url: '@Url.Action("CreateRoute", "Quotation")',
+        type: 'POST',
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        data: JSON.stringify(dto),
+        beforeSend: function (xhr) {
+          if (tokenVal) {
+            xhr.setRequestHeader('RequestVerificationToken', tokenVal);
+            xhr.setRequestHeader('__RequestVerificationToken', tokenVal);
+          }
+        },
+        success: function (res) {
+          handleRouteSaveResponse(res);
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+          console.warn('CreateRoute JSON POST failed:', jqXHR.status, textStatus, errorThrown);
+
+          // fallback once to form-encoded (include token as form field)
+          if (!jqXHR._retriedWithForm) {
+            jqXHR._retriedWithForm = true;
+            var formPayload = $.extend({}, dto, { __RequestVerificationToken: tokenVal });
+
+            $.ajax({
+              url: '@Url.Action("CreateRoute", "Quotation")',
+              type: 'POST',
+              dataType: 'json',
+              data: formPayload,
+              success: function (res2) {
+                handleRouteSaveResponse(res2);
+              },
+              error: function (jq2) {
+                console.error('CreateRoute form-encoded POST failed:', jq2.status, jq2.responseText);
+                var message = (jq2.responseJSON && jq2.responseJSON.message) || jq2.responseText || jq2.statusText;
+                alert('Save error: ' + message);
+              },
+              complete: function () {
+                if ($btn) $btn.prop('disabled', false).text('Save');
+              }
+            });
+          } else {
+            var message = (jqXHR.responseJSON && jqXHR.responseJSON.message) || jqXHR.responseText || jqXHR.statusText;
+            alert('Save error: ' + message);
+            if ($btn) $btn.prop('disabled', false).text('Save');
+          }
+        },
+        complete: function () {
+          // If form fallback runs, it handles re-enable; otherwise re-enable here
+          if ($btn) $btn.prop('disabled', false).text('Save');
+        }
+      });
+    }
+
+    /* -------------------------
+       Route window handlers (open/close/save) and Validation
+       ------------------------- */
+
+    $(document).ready(function () {
+      // delegated toolbar add route button
+      $(document).on('click', '#btnAddRoute', function (ev) {
+        ev.preventDefault();
+        var q = getQuotationIdValue();
+        if (!q || q <= 0) {
+          alert('First Create Quotation');
+          return;
+        }
+        // ensure window exists and open
+        var w = $('#RouteWindow').data('kendoWindow');
+        if (!w) {
+          $('#RouteWindow').kendoWindow({
+            width: "1100px",
+            title: "Route",
+            modal: true,
+            visible: false,
+            actions: ["Close"],
+            draggable: true,
+            resizable: true
+          });
+          w = $('#RouteWindow').data('kendoWindow');
+        }
+        // clear inputs, set QuotationId in hidden inside window, open
+        $('#RouteWindow input#QuotationId').val(q);
+        w.center().open();
+      });
+
+      // cancel
+      $(document).on('click', '#btnCancelEdit', function (ev) {
+        ev.preventDefault();
+        $('#RouteWindow').data('kendoWindow')?.close();
+      });
+
+      // save
+      $(document).on('click', '#btnSaveRoute', function (ev) {
+        ev.preventDefault();
+        var $btn = $(this).prop('disabled', true).text('Saving...');
+        var dto = buildRouteDto();
+
+        // basic client validation
+        if (!dto.QuotationId || dto.QuotationId <= 0) {
+            alert('First Create Quotation');
+          $btn.prop('disabled', false).text('Save');
+          return;
+        }
+        if (!dto.Mode) { alert('Mode is required.'); $btn.prop('disabled', false).text('Save'); return; }
+        if (!dto.OriginPortId) { alert('Origin is required.'); $btn.prop('disabled', false).text('Save'); return; }
+          if (!dto.DestinationPortId) { alert('Destination is required.'); $btn.prop('disabled', false).text('Save'); return; }
+          if (!dto.TSP1PortId) { alert('TSP1Port is required.'); $btn.prop('disabled', false).text('Save'); return; }
+          if (!dto.TSP2PortId) { alert('TSP2Port is required.'); $btn.prop('disabled', false).text('Save'); return; }
+          if (!dto.TSP3PortId) { alert('TSP3Port is required.'); $btn.prop('disabled', false).text('Save'); return; }
+        saveRouteAjax(dto, $btn);
+      });
+
+      console.log('Route client script initialized.');
+    });
+
+    
+
+
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

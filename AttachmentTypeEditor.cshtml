@@ -1,0 +1,13 @@
+﻿@model string
+
+@(Html.Kendo().DropDownListFor(m => m)
+          .OptionLabel("Select Type...")
+          .DataTextField("Text")
+          .DataValueField("Value")
+          .ValuePrimitive(true)
+          .BindTo(new List<SelectListItem>
+          {
+  new SelectListItem { Text = "Attachment1", Value = "Attachment1" },
+  new SelectListItem { Text = "Attachment2", Value = "Attachment2" }
+          })
+)
